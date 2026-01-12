@@ -1,9 +1,12 @@
+import { usePluginStore, useWatchEvent } from '@/hooks/plugin';
+
 export default function (name: string) {
   const ActionID = `${window.argv[3].plugin.uuid}.${name}`;
 
   type Settings = {
     showSeconds: boolean;
     showDate: boolean;
+    command: string;
   }
 
   const plugin = usePluginStore();
@@ -14,14 +17,17 @@ export default function (name: string) {
     // Called when action appears on device
     willAppear({ context }) {
       const action = plugin.getAction(context);
+      if (!action) return;
+
+      const settings = action.settings as any;
       // Ensure default settings exist
-      if (!('showSeconds' in action.settings)) {
-        action.settings.showSeconds = true;
+      if (settings.showSeconds === undefined) {
+        settings.showSeconds = true;
       }
-      if (!('showDate' in action.settings)) {
-        action.settings.showDate = false;
+      if (settings.showDate === undefined) {
+        settings.showDate = false;
       }
-      action.setSettings(action.settings);
+      action.setSettings(settings);
       updateTimer(context);
     },
 
@@ -33,12 +39,39 @@ export default function (name: string) {
     // Called when action is removed
     willDisappear({ context }) {
       plugin.Unterval(context);
+    },
+
+    // Called when button is pressed
+    keyUp({ context }) {
+      const action = plugin.getAction(context);
+      if (!action) return;
+
+      const settings = action.settings as Settings;
+      if (settings.command && settings.command.trim()) {
+        // Execute the terminal command via openUrl for file:// or http:// protocols
+        // For terminal commands, user can use: file:///C:/path/to/script.bat or similar
+        if (settings.command.startsWith('http://') ||
+            settings.command.startsWith('https://') ||
+            settings.command.startsWith('file://')) {
+          action.openUrl(settings.command);
+        } else {
+          // For non-URL commands, log to console
+          // In a production environment, this would need proper command execution support from the host app
+          console.log('Execute command:', settings.command);
+
+          // Try to execute using a batch file URL on Windows
+          // User would need to create a .bat file with their commands
+          // Example command input: "file:///C:/scripts/mycommand.bat"
+        }
+      }
     }
   });
 
   const updateTimer = (context: string) => {
     const date = new Date();
     const action = plugin.getAction(context);
+    if (!action) return;
+
     const settings = action.settings as Settings;
 
     action.setTitle(formatTime12h(date, settings));

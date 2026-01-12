@@ -38,7 +38,8 @@ const Actions = [
     ],
     Settings: {
       showSeconds: true,
-      showDate: false
+      showDate: false,
+      command: ''
     },
     UserTitleEnabled: false,
     SupportedInMultiActions: false,

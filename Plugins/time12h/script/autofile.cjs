@@ -3,15 +3,15 @@ const fs = require('fs-extra');
 
 const manifest = {};
 const { PUUID, Actions, i18n, CategoryIcon, Version } = require('../src/manifest.cjs');
-console.log('开始执行自动化构建...');
+console.log('Starting automated build...');
 
-// 开发环境处理
+// Development environment handling
 if (process.argv[2] === 'dev') {
   fs.removeSync('./dist') || fs.mkdirSync('./dist') || fs.copySync('./public', './dist');
   fs.copyFileSync('./script/_.html', './dist/_.html');
 }
 
-// 根据用户生成
+// Generate based on user configuration
 manifest.Actions = Actions.map((item) => {
   item.Name = item.i18n['en'].Name;
   item.Tooltip = item.i18n['en'].Tooltip;
@@ -27,7 +27,7 @@ manifest.Category = i18n['en'].Name;
 manifest.Description = i18n['en'].Description;
 manifest.CodePath = process.argv[2] === 'dev' ? '_.html' : 'index.html';
 
-// 版本固定生成
+// Fixed version generation
 manifest.SDKVersion = 1;
 manifest.Author = 'StreamDock Community';
 manifest.URL = 'https://github.com/mirabox-coder/StreamDock-Plugins';
@@ -42,7 +42,7 @@ manifest.OS = [
   }
 ];
 
-// 语言文件生成
+// Language file generation
 Object.keys(i18n).forEach((item) => {
   const obj = {};
   obj.Name = i18n[item].Name;
@@ -58,19 +58,19 @@ Object.keys(i18n).forEach((item) => {
   fs.writeJSONSync(`./dist/${item}.json`, obj);
 });
 
-// 生成清单文件
+// Generate manifest file
 manifest.Actions = manifest.Actions.map((item) => {
   delete item.i18n;
   return item;
 });
 fs.writeJSONSync('./dist/manifest.json', manifest, { spaces: 2, EOL: '\r\n' });
 
-// 复制到插件文件夹
+// Copy to plugin folder
 const PluginName = `com.mirabox.streamdock.${PUUID}.sdPlugin`;
 if (process.env.APPDATA) {
   const PluginPath = path.join(process.env.APPDATA, 'HotSpot/StreamDock/plugins', PluginName);
   fs.removeSync(PluginPath) || fs.mkdirSync(PluginPath) || fs.copySync('./dist', PluginPath);
-  console.log(`插件已复制到: ${PluginPath}`);
+  console.log(`Plugin copied to: ${PluginPath}`);
 } else {
-  console.log('非 Windows 系统，跳过自动复制到插件目录。请手动复制 dist 文件夹到 StreamDock 插件目录。');
+  console.log('Non-Windows system, skipping automatic copy to plugin directory. Please manually copy the dist folder to the StreamDock plugin directory.');
 }

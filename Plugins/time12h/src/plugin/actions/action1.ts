@@ -28,6 +28,10 @@ export default function (name: string) {
         settings.showDate = false;
       }
       action.setSettings(settings);
+
+      // Set black background
+      setBlackBackground(context);
+
       updateTimer(context);
     },
 
@@ -66,6 +70,25 @@ export default function (name: string) {
       }
     }
   });
+
+  const setBlackBackground = (context: string) => {
+    const action = plugin.getAction(context);
+    if (!action) return;
+
+    // Create a black canvas image
+    const canvas = document.createElement('canvas');
+    canvas.width = 144;
+    canvas.height = 144;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Convert canvas to data URL and set as image
+      const imageData = canvas.toDataURL('image/png');
+      action.setImage(imageData);
+    }
+  };
 
   const updateTimer = (context: string) => {
     const date = new Date();
